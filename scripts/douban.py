@@ -6,14 +6,16 @@ from retrying import retry
 import requests
 from notion_helper import NotionHelper
 import utils
+from typing import List
 
 DOUBAN_API_HOST = os.getenv("DOUBAN_API_HOST", "frodo.douban.com")
 DOUBAN_API_KEY = os.getenv("DOUBAN_API_KEY", "0ac44ae016490db2204ce0a042db2916")
 
-from config import movie_properties_type_dict,book_properties_type_dict, TAG_ICON_URL, USER_ICON_URL
+from config import movie_properties_type_dict,book_properties_type_dict, TAG_ICON_URL, USER_ICON_URL, UserInterests
 from utils import get_icon
 
 rating = {
+    0: "未评分",
     1: "⭐️",
     2: "⭐️⭐️",
     3: "⭐️⭐️⭐️",
@@ -59,7 +61,9 @@ def fetch_subjects(user, type_, status):
         if response.ok:
             response = response.json()
             interests = response.get("interests")
+            print(f"Current Page = {len(interests)}")
             if len(interests)==0:
+                print(f"---- { status } fetch Done! -----")
                 break
             results.extend(interests)
             print(f"total = {total}")
@@ -68,15 +72,15 @@ def fetch_subjects(user, type_, status):
             offset = page * 50
     return results
 
-
-
 def insert_movie():
     notion_movies = notion_helper.query_all(database_id=notion_helper.movie_database_id)
     notion_movie_dict = {}
     for i in notion_movies:
+        # 从notion获取已存在的数据库数据
         movie = {}
         for key, value in i.get("properties").items():
             movie[key] = utils.get_property_value(value)
+        # 使用豆瓣链接当做唯一 Unique Key
         notion_movie_dict[movie.get("豆瓣链接")] = {
             "短评": movie.get("短评"),
             "状态": movie.get("状态"),
@@ -84,25 +88,26 @@ def insert_movie():
             "评分": movie.get("评分"),
             "page_id": i.get("id")
         }
-    print(f"notion {len(notion_movie_dict)}")
-    results = []
+    print(f"Current Notion Movie Database Count: {len(notion_movie_dict)}")
+    results: List[UserInterests] = []
     for i in movie_status.keys():
-        results.extend(fetch_subjects(douban_name, "movie", i))
+        for json_data in fetch_subjects(douban_name, "movie", i):
+            results.append(UserInterests(json_data))
     for result in results:
         movie = {}
-        subject = result.get("subject")
-        movie["电影名"] = subject.get("title")
-        create_time = result.get("create_time")
+        subject = result.subject
+        movie["电影名"] = subject.title
+        create_time = result.createTime
         create_time = pendulum.parse(create_time,tz=utils.tz)
         #时间上传到Notion会丢掉秒的信息，这里直接将秒设置为0
         create_time = create_time.replace(second=0)
         movie["日期"] = create_time.int_timestamp
-        movie["豆瓣链接"] = subject.get("url")
-        movie["状态"] = movie_status.get(result.get("status"))
-        if result.get("rating"):
-            movie["评分"] = rating.get(result.get("rating").get("value"))
-        if result.get("comment"):
-            movie["短评"] = result.get("comment")
+        movie["豆瓣链接"] = subject.url
+        movie["状态"] = movie_status.get(result.status)
+        if result.rating:
+            movie["评分"] = rating.get(result.rating)
+        if result.comment:
+            movie["短评"] = result.comment
         if notion_movie_dict.get(movie.get("豆瓣链接")):
             notion_movive = notion_movie_dict.get(movie.get("豆瓣链接"))
             if (
@@ -120,19 +125,19 @@ def insert_movie():
 
         else:
             print(f"插入{movie.get('电影名')}")
-            cover = subject.get("pic").get("large")
+            cover = subject.cover_url
             movie["封面"] = cover
-            movie["类型"] = subject.get("type")
-            if subject.get("genres"):
+            movie["类型"] = subject.type
+            if subject.genres:
                 movie["分类"] = [
                     notion_helper.get_relation_id(
                         x, notion_helper.category_database_id, TAG_ICON_URL
                     )
-                    for x in subject.get("genres")
+                    for x in subject.genres
                 ]
-            if subject.get("actors"):
+            if subject.actors:
                 l = []
-                actors = subject.get("actors")[0:100]
+                actors = subject.actors
                 for actor in actors:
                     if actor.get("name"):
                         if "/" in actor.get("name"):
@@ -140,13 +145,14 @@ def insert_movie():
                         else:
                             l.append(actor.get("name"))  
                 movie["演员"] = l
-            if subject.get("directors"):
+            if subject.directos:
                 movie["导演"] = [
                     notion_helper.get_relation_id(
                         x.get("name"), notion_helper.director_database_id, USER_ICON_URL
                     )
-                    for x in subject.get("directors")[0:100]
+                    for x in subject.directos
                 ]
+            movie["发布年份"] = subject.pubYear
             properties = utils.get_properties(movie, movie_properties_type_dict)
             notion_helper.get_date_relation(properties,create_time)
             parent = {
