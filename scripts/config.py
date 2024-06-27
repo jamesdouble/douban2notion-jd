@@ -46,6 +46,7 @@ movie_properties_type_dict = {
     "日期":DATE,
     "简介":RICH_TEXT,
     "发布年份": SELECT,
+    "原名": RICH_TEXT
 }
 
 ## 用户相关的观影评价，Subject -> MovieSubject
@@ -132,7 +133,10 @@ class MovieSubject:
 
     def update_detail(self, detail):
         # 标题(原文)
-        self.originTitle = detail.get("original_title")
+        if detail.get("original_title"):
+            self.originTitle = detail.get("original_title")
+        else:
+            self.originTitle = self.title
         # 介绍
         self.intro = detail.get("intro")
         # 集数

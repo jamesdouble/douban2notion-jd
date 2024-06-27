@@ -72,6 +72,19 @@ def fetch_subjects(user, type_, status):
             offset = page * 50
     return results
 
+def fetch_subject_detail(douban_id, type):
+    print(f"抓取 TV {douban_id} 详细信息")
+    url = f"https://{DOUBAN_API_HOST}/api/v2/{type}/{douban_id}"
+    params = {
+        "apiKey": DOUBAN_API_KEY,
+    }
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.ok:
+        return response.json()
+    else:
+        return {}
+
 def insert_movie():
     notion_movies = notion_helper.query_all(database_id=notion_helper.movie_database_id)
     notion_movie_dict = {}
@@ -125,9 +138,20 @@ def insert_movie():
 
         else:
             print(f"插入{movie.get('电影名')}")
+            movie["类型"] = subject.type
+            movie["豆瓣ID"] = subject.doubanID
+            if subject.type == 'tv':
+                # 拉取 TV 详细信息
+                detail_data = fetch_subject_detail(subject.doubanID, 'tv')
+                subject.update_detail(detail_data)
+            elif subject.type == 'movie':
+                detail_data = fetch_subject_detail(subject.doubanID, 'movie')
+                subject.update_detail(detail_data)
+            else:
+                subject.update_detail({})
             cover = subject.cover_url
             movie["封面"] = cover
-            movie["类型"] = subject.type
+            movie["原名"] = subject.originTitle
             if subject.genres:
                 movie["分类"] = [
                     notion_helper.get_relation_id(
