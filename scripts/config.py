@@ -32,6 +32,7 @@ BOOK_ICON_URL = "https://www.notion.so/icons/book_gray.svg"
 
 
 movie_properties_type_dict = {
+    "豆瓣ID": RICH_TEXT,
     "豆瓣链接":URL,
     "电影名":TITLE,
     "短评":RICH_TEXT,
@@ -96,6 +97,8 @@ class MovieSubject:
 
     # 从 UserInterests 接口返回的，不完整
     def __init__(self, interests_subject):
+        # 豆瓣 ID
+        self.doubanID = interests_subject.get("id")
         # 标题
         self.title = interests_subject.get("title")
         # 豆瓣链接
@@ -120,11 +123,21 @@ class MovieSubject:
         else:
             self.directos = []
         # 发布年份
-        self.pubYear = interests_subject.get("year")
+        if interests_subject.get("year"):
+            self.pubYear = interests_subject.get("year")
+        else:
+            self.pubYear = "无"
+        # 豆瓣网友评分
+        self.doubanRate = interests_subject.get("rating").get("value")
 
     def update_detail(self, detail):
         # 标题(原文)
-        self.originTitle = detail.get("")
+        self.originTitle = detail.get("original_title")
+        # 介绍
+        self.intro = detail.get("intro")
+        # 集数
+        self.episodesCount = detail.get("episodes_count")
+
  
 
 ## 看过接口返回的数据中，Subject 对应一个影视
