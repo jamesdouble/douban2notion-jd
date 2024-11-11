@@ -109,10 +109,11 @@ def insert_movie():
     for i in movie_status.keys():
         movie_subjects = fetch_subjects(douban_name, "movie", i)
         for json_data in movie_subjects:
-            userInterests = UserInterests(json_data)
-            if userInterests is None:
-                continue
-            results.append(UserInterests(json_data))
+            try:
+                userInterests = UserInterests(json_data)
+                results.append(userInterests)
+            except:
+                continue          
     for result in results:
         movie = {}
         subject = result.subject
