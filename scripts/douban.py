@@ -107,7 +107,11 @@ def insert_movie():
     print(f"Current Notion Movie Database Count: {len(notion_movie_dict)}")
     results: List[UserInterests] = []
     for i in movie_status.keys():
-        for json_data in fetch_subjects(douban_name, "movie", i):
+        movie_subjects = fetch_subjects(douban_name, "movie", i)
+        for json_data in movie_subjects:
+            userInterests = UserInterests(json_data)
+            if userInterests is None:
+                continue
             results.append(UserInterests(json_data))
     for result in results:
         movie = {}

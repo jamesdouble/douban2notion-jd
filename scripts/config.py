@@ -77,6 +77,8 @@ class UserInterests:
 
     def __init__(self, data):
         # 对应影视或书
+        if data.get("subject") is None:
+            return
         subject_json = data.get("subject")
         self.subject = MovieSubject(subject_json)
         # 评价更新时间
