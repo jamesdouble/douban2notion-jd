@@ -16,6 +16,10 @@ jobs:
         MOVIE_NOTION_TOKEN: ${{ secrets.MOVIE_NOTION_TOKEN }}
         NOTION_MOVIE_URL: ${{ secrets.NOTION_MOVIE_URL }}
         DOUBAN_NAME: ${{ secrets.DOUBAN_NAME }}
+        OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+        OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        OSS_BUCKET_NAME: ${{ secrets.OSS_BUCKET_NAME }}
+        OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
         YEAR: ${{ vars.YEAR }}
         REF: ${{ github.ref }}
         REPOSITORY: ${{ github.repository }}
