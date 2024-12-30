@@ -22,10 +22,10 @@ DOUBAN_API_HOST = os.getenv("DOUBAN_API_HOST", "frodo.douban.com")
 DOUBAN_API_KEY = os.getenv("DOUBAN_API_KEY", "0ac44ae016490db2204ce0a042db2916")
 
 # Configure Alibaba Cloud OSS
-OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID", "")
-OSS_ACCESS_KEY_SECRET = os.getenv("OSS_ACCESS_KEY_SECRET", "")
-OSS_BUCKET_NAME = os.getenv("OSS_BUCKET_NAME", "")
-OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "")
+OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID")
+OSS_ACCESS_KEY_SECRET = os.getenv("OSS_ACCESS_KEY_SECRET")
+OSS_BUCKET_NAME = os.getenv("OSS_BUCKET_NAME")
+OSS_ENDPOINT = os.getenv("OSS_ENDPOINT")
 
 # Initialize OSS bucket
 auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
