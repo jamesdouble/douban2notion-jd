@@ -44,7 +44,7 @@ def upload_image_to_oss(image_url: str) -> str:
     Returns the new URL of the image in OSS.
     """
     try:
-        if OSS_ACCESS_KEY_ID.count <= 0:
+        if not OSS_ACCESS_KEY_ID or len(OSS_ACCESS_KEY_ID) <= 0:
             return image_url
 
         # Download the image to a temporary file
