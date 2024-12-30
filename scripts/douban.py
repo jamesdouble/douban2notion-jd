@@ -9,13 +9,56 @@ from notion_helper import NotionHelper
 import utils
 from typing import List
 import feedparser
-
-DOUBAN_API_HOST = os.getenv("DOUBAN_API_HOST", "frodo.douban.com")
-DOUBAN_API_KEY = os.getenv("DOUBAN_API_KEY", "0ac44ae016490db2204ce0a042db2916")
+## Aliyun
+import oss2
+import uuid
+from urllib.request import urlretrieve
 
 from config import movie_properties_type_dict,book_properties_type_dict, TAG_ICON_URL, USER_ICON_URL, UserInterests
 from utils import get_icon
 from dotenv import load_dotenv
+
+DOUBAN_API_HOST = os.getenv("DOUBAN_API_HOST", "frodo.douban.com")
+DOUBAN_API_KEY = os.getenv("DOUBAN_API_KEY", "0ac44ae016490db2204ce0a042db2916")
+
+# Configure Alibaba Cloud OSS
+OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID", "")
+OSS_ACCESS_KEY_SECRET = os.getenv("OSS_ACCESS_KEY_SECRET", "")
+OSS_BUCKET_NAME = os.getenv("OSS_BUCKET_NAME", "")
+OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "")
+
+# Initialize OSS bucket
+auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
+bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
+
+def upload_image_to_oss(image_url: str) -> str:
+    """
+    Downloads an image from a URL and uploads it to Alibaba Cloud OSS.
+    Returns the new URL of the image in OSS.
+    """
+    try:
+        if OSS_ACCESS_KEY_ID.count <= 0:
+            return image_url
+
+        # Download the image to a temporary file
+        local_filename = f"/tmp/{uuid.uuid4()}.jpg"
+        urlretrieve(image_url, local_filename)
+
+        # Generate a unique key for the image in OSS
+        oss_key = f"images/{uuid.uuid4()}.jpg"
+
+        # Upload the image to OSS
+        with open(local_filename, "rb") as file:
+            bucket.put_object(oss_key, file)
+
+        # Construct the OSS URL
+        oss_url = f"https://{OSS_BUCKET_NAME}.{OSS_ENDPOINT}/{oss_key}"
+
+        return oss_url
+    except Exception as e:
+        print(f"Error uploading image to OSS: {e}")
+        return image_url  # Fallback to the original URL if upload fails
+
 load_dotenv()
 rating = {
     0: "未评分",
@@ -165,7 +208,7 @@ def insert_movie():
             else:
                 subject.update_detail({})
             cover = subject.cover_url
-            movie["封面"] = cover
+            movie["封面"] = upload_image_to_oss(cover)
             movie["原名"] = subject.originTitle
             if subject.genres:
                 movie["分类"] = [
