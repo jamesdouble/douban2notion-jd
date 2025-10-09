@@ -32,6 +32,7 @@ class NotionHelper:
         "YEAR_DATABASE_NAME": "年",
         "CATEGORY_DATABASE_NAME": "分类",
         "DIRECTOR_DATABASE_NAME": "导演",
+        "ACTOR_DATABASE_NAME": "演员",
         "AUTHOR_DATABASE_NAME": "作者",
     }
     database_id_dict = {}
@@ -76,6 +77,9 @@ class NotionHelper:
         self.director_database_id = self.database_id_dict.get(
             self.database_name_dict.get("DIRECTOR_DATABASE_NAME")
         )
+        self.actor_database_id = self.database_id_dict.get(
+            self.database_name_dict.get("ACTOR_DATABASE_NAME")
+        )
         self.author_database_id = self.database_id_dict.get(
             self.database_name_dict.get("AUTHOR_DATABASE_NAME")
         )
@@ -84,11 +88,9 @@ class NotionHelper:
 
     def write_database_id(self, database_id):
         env_file = os.getenv('GITHUB_ENV')
-        if env_file:
-            # 将值写入环境文件
-            with open(env_file, "a") as file:
-                file.write(f"DATABASE_ID={database_id}\n")
-        
+        # 将值写入环境文件
+        with open(env_file, "a") as file:
+            file.write(f"DATABASE_ID={database_id}\n")
     def extract_page_id(self, notion_url):
         # 正则表达式匹配 32 个字符的 Notion page_id
         match = re.search(
