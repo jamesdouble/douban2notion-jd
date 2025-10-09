@@ -1,25 +1,19 @@
 import logging
 import os
 import re
-import time
 
 from notion_client import Client
 from retrying import retry
-from datetime import timedelta
 
-from utils import (
+from douban2notion.utils import (
     format_date,
     get_date,
     get_first_and_last_day_of_month,
     get_first_and_last_day_of_week,
     get_first_and_last_day_of_year,
     get_icon,
-    get_number,
     get_relation,
-    get_rich_text,
     get_title,
-    timestamp_to_date,
-    get_property_value,
 )
 
 TAG_ICON_URL = "https://www.notion.so/icons/tag_gray.svg"
@@ -38,6 +32,7 @@ class NotionHelper:
         "YEAR_DATABASE_NAME": "年",
         "CATEGORY_DATABASE_NAME": "分类",
         "DIRECTOR_DATABASE_NAME": "导演",
+        "ACTOR_DATABASE_NAME": "演员",
         "AUTHOR_DATABASE_NAME": "作者",
     }
     database_id_dict = {}
@@ -84,9 +79,13 @@ class NotionHelper:
         )
         self.author_database_id = self.database_id_dict.get(
             self.database_name_dict.get("AUTHOR_DATABASE_NAME")
+        )      
+        self.actor_database_id = self.database_id_dict.get(
+            self.database_name_dict.get("ACTOR_DATABASE_NAME")
         )
         if self.day_database_id:
             self.write_database_id(self.day_database_id)
+        self.update_movie_database()
 
     def write_database_id(self, database_id):
         env_file = os.getenv('GITHUB_ENV')
@@ -104,7 +103,7 @@ class NotionHelper:
         else:
             raise Exception(f"获取NotionID失败，请检查输入的Url是否正确")
 
-
+    @retry(stop_max_attempt_number=3, wait_fixed=5000)
     def search_database(self, block_id):
         children = self.client.blocks.children.list(block_id=block_id)["results"]
         # 遍历子块
@@ -121,6 +120,7 @@ class NotionHelper:
             # 如果子块有子块，递归调用函数
             if "has_children" in child and child["has_children"]:
                 self.search_database(child["id"])
+
     @retry(stop_max_attempt_number=3, wait_fixed=5000)
     def update_heatmap(self, block_id, url):
         # 更新 image block 的链接
@@ -176,6 +176,25 @@ class NotionHelper:
         return self.get_relation_id(
             day, self.day_database_id, TARGET_ICON_URL, properties
         )
+    
+    def update_movie_database(self):
+        """更新数据库"""
+        response = self.client.databases.retrieve(database_id=self.movie_database_id)
+        id = response.get("id")
+        properties = response.get("properties")
+        update_properties = {}
+        if (
+            properties.get("演员") is None
+            or properties.get("演员").get("type") != "relation"
+        ):
+            update_properties["演员"] = {"relation": {"database_id": self.actor_database_id,"dual_property":{}}}
+        if (
+            properties.get("IMDB") is None
+            or properties.get("IMDB").get("type") != "rich_text"
+        ):
+            update_properties["IMDB"] = {"rich_text": {}}
+        if len(update_properties) > 0:
+            self.client.databases.update(database_id=id, properties=update_properties)
     
     @retry(stop_max_attempt_number=3, wait_fixed=5000)
     def get_relation_id(self, name, id, icon, properties={}):

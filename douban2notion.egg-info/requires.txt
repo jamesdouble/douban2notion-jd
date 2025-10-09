@@ -1,9 +1,6 @@
 requests
+pendulum
+retrying
 notion-client
 github-heatmap
-retrying
-pendulum
 python-dotenv
-feedparser
-oss2
-douban2notion
