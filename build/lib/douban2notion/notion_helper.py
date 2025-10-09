@@ -32,6 +32,7 @@ class NotionHelper:
         "YEAR_DATABASE_NAME": "年",
         "CATEGORY_DATABASE_NAME": "分类",
         "DIRECTOR_DATABASE_NAME": "导演",
+        "ACTOR_DATABASE_NAME": "演员",
         "AUTHOR_DATABASE_NAME": "作者",
     }
     database_id_dict = {}
@@ -75,6 +76,9 @@ class NotionHelper:
         )
         self.director_database_id = self.database_id_dict.get(
             self.database_name_dict.get("DIRECTOR_DATABASE_NAME")
+        )
+        self.actor_database_id = self.database_id_dict.get(
+            self.database_name_dict.get("ACTOR_DATABASE_NAME")
         )
         self.author_database_id = self.database_id_dict.get(
             self.database_name_dict.get("AUTHOR_DATABASE_NAME")

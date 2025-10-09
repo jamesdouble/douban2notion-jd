@@ -224,12 +224,12 @@ def insert_movie(douban_name,notion_helper):
                 subject.update_detail(detail_data)
             else:
                 subject.update_detail({})
-            cover = subject.get("pic").get("normal")
+            cover = subject.cover_url
             if not cover.endswith('.webp'):
                 cover = cover.rsplit('.', 1)[0] + '.webp'
             movie["封面"] = upload_image_to_oss(cover)
             movie["原名"] = subject.originTitle
-            if subject.get("genres"):
+            if subject.genres:
                 movie["分类"] = [
                     notion_helper.get_relation_id(
                         x, notion_helper.category_database_id, TAG_ICON_URL
@@ -249,9 +249,9 @@ def insert_movie(douban_name,notion_helper):
                     notion_helper.get_relation_id(
                         x.get("name"), notion_helper.actor_database_id, USER_ICON_URL
                     )
-                    for x in subject.get("actors")[0:100]
+                    for x in subject.actors[0:100]
                 ]
-            if subject.get("directors"):
+            if subject.directos:
                 movie["导演"] = [
                     notion_helper.get_relation_id(
                         x.get("name"), notion_helper.director_database_id, USER_ICON_URL
@@ -368,7 +368,7 @@ def main():
     else:
         insert_book(douban_name,notion_helper)
 if __name__ == "__main__":
-    # main()
+    main()
     douban_name = os.getenv("DOUBAN_NAME", None)
     for i in movie_status.keys():
         fetch_subjects(douban_name, "movie", i)
