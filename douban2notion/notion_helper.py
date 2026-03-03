@@ -178,6 +178,25 @@ class NotionHelper:
             day, self.day_database_id, TARGET_ICON_URL, properties
         )
     
+    def update_movie_database(self):
+        response = self.client.databases.retrieve(database_id=self.movie_database_id)
+        id = response.get("id")
+        properties = response.get("properties")
+        update_properties = {}
+        if (
+            properties.get("演员") is None
+            or properties.get("演员").get("type") != "relation"
+        ):
+            update_properties["演员"] = {"relation": {"database_id": self.actor_database_id,"dual_property":{}}}
+        if (
+            properties.get("IMDB") is None
+            or properties.get("IMDB").get("type") != "rich_text"
+        ):
+            update_properties["IMDB"] = {"rich_text": {}}
+        if len(update_properties) > 0:
+            self.client.databases.update(database_id=id, properties=update_properties)
+
+    
     @retry(stop_max_attempt_number=3, wait_fixed=5000)
     def get_relation_id(self, name, id, icon, properties={}):
         key = f"{id}{name}"

@@ -15,16 +15,13 @@ import oss2
 import uuid
 from urllib.request import urlretrieve
 
-from config import movie_properties_type_dict,book_properties_type_dict, TAG_ICON_URL, USER_ICON_URL, UserInterests
-from utils import get_icon
 from dotenv import load_dotenv
 
 DOUBAN_API_HOST = os.getenv("DOUBAN_API_HOST", "frodo.douban.com")
 DOUBAN_API_KEY = os.getenv("DOUBAN_API_KEY", "0ac44ae016490db2204ce0a042db2916")
 
-from douban2notion.config import movie_properties_type_dict,book_properties_type_dict, TAG_ICON_URL, USER_ICON_URL
+from douban2notion.config import movie_properties_type_dict,book_properties_type_dict, TAG_ICON_URL, USER_ICON_URL, UserInterests
 from douban2notion.utils import get_icon
-from dotenv import load_dotenv
 
 # Configure Alibaba Cloud OSS
 OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID")
