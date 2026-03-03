@@ -37,7 +37,7 @@ movie_properties_type_dict = {
     "电影名":TITLE,
     "短评":RICH_TEXT,
     "导演":RELATION,
-    "演员":MULTI_SELECT,
+    "演员":RELATION,
     "封面":FILES,
     "分类":RELATION,
     "状态":STATUS,
