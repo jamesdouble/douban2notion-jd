@@ -23,60 +23,6 @@ DOUBAN_API_KEY = os.getenv("DOUBAN_API_KEY", "0ac44ae016490db2204ce0a042db2916")
 from douban2notion.config import movie_properties_type_dict,book_properties_type_dict, TAG_ICON_URL, USER_ICON_URL, UserInterests
 from douban2notion.utils import get_icon
 
-# Configure Alibaba Cloud OSS
-OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID")
-OSS_ACCESS_KEY_SECRET = os.getenv("OSS_ACCESS_KEY_SECRET")
-OSS_BUCKET_NAME = os.getenv("OSS_BUCKET_NAME")
-OSS_ENDPOINT = os.getenv("OSS_ENDPOINT")
-
-print(
-    f"OSS_ACCESS_KEY_ID = {OSS_ACCESS_KEY_ID}\n"
-    f"OSS_ACCESS_KEY_SECRET = {OSS_ACCESS_KEY_SECRET}\n"
-    f"OSS_ENDPOINT = {OSS_ENDPOINT}\n"
-    f"OSS_BUCKET_NAME = {OSS_BUCKET_NAME}\n"
-)
-
-# Initialize OSS bucket
-auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
-bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
-
-def upload_image_to_oss(image_url: str) -> str:
-    """
-    Downloads an image from a URL and uploads it to Alibaba Cloud OSS.
-    Returns the new URL of the image in OSS.
-    """
-    if not OSS_ACCESS_KEY_ID or len(OSS_ACCESS_KEY_ID) <= 0:
-        return image_url
-    local_filename = f"/tmp/{uuid.uuid4()}.jpg"
-    try:
-        # Download the image to a temporary file with proper headers
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36",
-            "Refer": "https://m.douban.com/"
-        }
-        response = requests.get(image_url, headers=headers, stream=True)
-        response.raise_for_status()
-        with open(local_filename, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-    except Exception as e:
-        print(f"Error downloading image {image_url}: {e}")
-        return image_url  # Fallback to the original URL if download fails
-    
-    try:
-        # Generate a unique key for the image in OSS
-        oss_key = f"images/{uuid.uuid4()}.jpg"
-        # Upload the image to OSS
-        with open(local_filename, "rb") as file:
-            bucket.put_object(oss_key, file)
-        # Construct the OSS URL
-        oss_url = f"https://{OSS_BUCKET_NAME}.{OSS_ENDPOINT}/{oss_key}"
-
-        return oss_url
-    except Exception as e:
-        print(f"Error uploading image {image_url} to OSS: {e}")
-        return image_url  # Fallback to the original URL if upload fails
-
 load_dotenv()
 rating = {
     0: "未评分",
@@ -104,6 +50,57 @@ headers = {
     "user-agent": "User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.16(0x18001023) NetType/WIFI Language/zh_CN",
     "referer": "https://servicewechat.com/wx2f9b06c1de1ccfca/84/page-frame.html",
 }
+
+# Configure Alibaba Cloud OSS
+OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID")
+OSS_ACCESS_KEY_SECRET = os.getenv("OSS_ACCESS_KEY_SECRET")
+OSS_BUCKET_NAME = os.getenv("OSS_BUCKET_NAME")
+OSS_ENDPOINT = os.getenv("OSS_ENDPOINT")
+
+print(
+    f"OSS_ACCESS_KEY_ID = {OSS_ACCESS_KEY_ID}\n"
+    f"OSS_ACCESS_KEY_SECRET = {OSS_ACCESS_KEY_SECRET}\n"
+    f"OSS_ENDPOINT = {OSS_ENDPOINT}\n"
+    f"OSS_BUCKET_NAME = {OSS_BUCKET_NAME}\n"
+)
+
+# Initialize OSS bucket
+auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
+bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
+
+def upload_image_to_oss(image_url: str) -> str:
+    """
+    Downloads an image from a URL and uploads it to Alibaba Cloud OSS.
+    Returns the new URL of the image in OSS.
+    """
+    if not OSS_ACCESS_KEY_ID or len(OSS_ACCESS_KEY_ID) <= 0:
+        return image_url
+    local_filename = f"/tmp/{uuid.uuid4()}.jpg"
+    try:
+        # Download the image to a temporary file with proper headers
+        response = requests.get(image_url, headers=headers, stream=True)
+        response.raise_for_status()
+        with open(local_filename, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+    except Exception as e:
+        print(f"Error downloading image {image_url}: {e}")
+        return image_url  # Fallback to the original URL if download fails
+    
+    try:
+        # Generate a unique key for the image in OSS
+        oss_key = f"images/{uuid.uuid4()}.jpg"
+        # Upload the image to OSS
+        with open(local_filename, "rb") as file:
+            bucket.put_object(oss_key, file)
+        # Construct the OSS URL
+        oss_url = f"https://{OSS_BUCKET_NAME}.{OSS_ENDPOINT}/{oss_key}"
+
+        return oss_url
+    except Exception as e:
+        print(f"Error uploading image {image_url} to OSS: {e}")
+        return image_url  # Fallback to the original URL if upload fails
+
 @retry(stop_max_attempt_number=3, wait_fixed=5000)
 def fetch_subjects(user, type_, status):
     offset = 0
