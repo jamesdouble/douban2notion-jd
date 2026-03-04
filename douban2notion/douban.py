@@ -10,10 +10,7 @@ from douban2notion.notion_helper import NotionHelper
 from douban2notion import utils
 from typing import List
 import feedparser
-## Aliyun
-import oss2
-import uuid
-from urllib.request import urlretrieve
+from douban2notion.oss_helper import upload_image_to_oss
 
 from dotenv import load_dotenv
 
@@ -50,56 +47,6 @@ headers = {
     "user-agent": "User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.16(0x18001023) NetType/WIFI Language/zh_CN",
     "referer": "https://servicewechat.com/wx2f9b06c1de1ccfca/84/page-frame.html",
 }
-
-# Configure Alibaba Cloud OSS
-OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID")
-OSS_ACCESS_KEY_SECRET = os.getenv("OSS_ACCESS_KEY_SECRET")
-OSS_BUCKET_NAME = os.getenv("OSS_BUCKET_NAME")
-OSS_ENDPOINT = os.getenv("OSS_ENDPOINT")
-
-print(
-    f"OSS_ACCESS_KEY_ID = {OSS_ACCESS_KEY_ID}\n"
-    f"OSS_ACCESS_KEY_SECRET = {OSS_ACCESS_KEY_SECRET}\n"
-    f"OSS_ENDPOINT = {OSS_ENDPOINT}\n"
-    f"OSS_BUCKET_NAME = {OSS_BUCKET_NAME}\n"
-)
-
-# Initialize OSS bucket
-auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
-bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
-
-def upload_image_to_oss(image_url: str) -> str:
-    """
-    Downloads an image from a URL and uploads it to Alibaba Cloud OSS.
-    Returns the new URL of the image in OSS.
-    """
-    if not OSS_ACCESS_KEY_ID or len(OSS_ACCESS_KEY_ID) <= 0:
-        return image_url
-    local_filename = f"/tmp/{uuid.uuid4()}.jpg"
-    try:
-        # Download the image to a temporary file with proper headers
-        response = requests.get(image_url, headers=headers, stream=True)
-        response.raise_for_status()
-        with open(local_filename, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-    except Exception as e:
-        print(f"Error downloading image {image_url}: {e}")
-        return image_url  # Fallback to the original URL if download fails
-    
-    try:
-        # Generate a unique key for the image in OSS
-        oss_key = f"images/{uuid.uuid4()}.jpg"
-        # Upload the image to OSS
-        with open(local_filename, "rb") as file:
-            bucket.put_object(oss_key, file)
-        # Construct the OSS URL
-        oss_url = f"https://{OSS_BUCKET_NAME}.{OSS_ENDPOINT}/{oss_key}"
-
-        return oss_url
-    except Exception as e:
-        print(f"Error uploading image {image_url} to OSS: {e}")
-        return image_url  # Fallback to the original URL if upload fails
 
 @retry(stop_max_attempt_number=3, wait_fixed=5000)
 def fetch_subjects(user, type_, status):
@@ -230,7 +177,7 @@ def insert_movie(douban_name,notion_helper):
             cover = subject.cover_url
             if not cover.endswith('.webp'):
                 cover = cover.rsplit('.', 1)[0] + '.webp'
-            movie["封面"] = upload_image_to_oss(cover)
+            movie["封面"] = upload_image_to_oss(cover, headers=headers)
             movie["原名"] = subject.originTitle
             if subject.genres:
                 movie["分类"] = [
