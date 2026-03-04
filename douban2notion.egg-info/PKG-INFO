@@ -1,10 +1,10 @@
 Metadata-Version: 2.4
 Name: douban2notion
 Version: 0.0.14
-Summary: 自动将豆瓣电影和豆瓣读书同步到Notion
+Summary: 自动将豆瓣电影和豆瓣读书同步到Notion_jd版
 Home-page: https://github.com/malinkang/weread2notion-pro
-Author: malinkang
-Author-email: linkang.ma@gmail.com
+Author: jamesdouble
+Author-email: jameskuo12345@gmail.com
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
