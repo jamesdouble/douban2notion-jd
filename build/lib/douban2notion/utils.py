@@ -335,6 +335,7 @@ def str_to_timestamp(date):
     if date == None:
         return 0
     try:
+        print(f"Parsing date: {date}")
         dt = pendulum.parse(date)
         # 获取时间戳
         return int(dt.timestamp())
