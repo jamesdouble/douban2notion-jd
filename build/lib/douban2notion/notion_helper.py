@@ -82,9 +82,6 @@ class NotionHelper:
         )
         self.author_database_id = self.database_id_dict.get(
             self.database_name_dict.get("AUTHOR_DATABASE_NAME")
-        )      
-        self.actor_database_id = self.database_id_dict.get(
-            self.database_name_dict.get("ACTOR_DATABASE_NAME")
         )
         if self.day_database_id:
             self.write_database_id(self.day_database_id)
@@ -182,7 +179,6 @@ class NotionHelper:
         )
     
     def update_movie_database(self):
-        """更新数据库"""
         response = self.client.databases.retrieve(database_id=self.movie_database_id)
         id = response.get("id")
         properties = response.get("properties")
@@ -199,6 +195,7 @@ class NotionHelper:
             update_properties["IMDB"] = {"rich_text": {}}
         if len(update_properties) > 0:
             self.client.databases.update(database_id=id, properties=update_properties)
+
     
     @retry(stop_max_attempt_number=3, wait_fixed=5000)
     def get_relation_id(self, name, id, icon, properties={}):
