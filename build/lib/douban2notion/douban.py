@@ -1,5 +1,4 @@
 import argparse
-from email import feedparser
 import json
 import os
 import re
@@ -9,7 +8,6 @@ import requests
 from douban2notion.notion_helper import NotionHelper
 from douban2notion import utils
 from typing import List
-import feedparser
 from douban2notion.oss_helper import upload_image_to_oss
 
 from dotenv import load_dotenv
