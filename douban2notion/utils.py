@@ -6,7 +6,7 @@ import os
 import re
 import requests
 import base64
-from config import (
+from douban2notion.config import (
     RICH_TEXT,
     URL,
     RELATION,
@@ -334,9 +334,13 @@ def get_weread_url(book_id):
 def str_to_timestamp(date):
     if date == None:
         return 0
-    dt = pendulum.parse(date)
-    # 获取时间戳
-    return int(dt.timestamp())
+    try:
+        dt = pendulum.parse(date)
+        # 获取时间戳
+        return int(dt.timestamp())
+    except Exception as e:
+        print(f"Error parsing date {date}: {e}")
+        return 0
 
 upload_url = 'https://wereadassets.malinkang.com/'
 
